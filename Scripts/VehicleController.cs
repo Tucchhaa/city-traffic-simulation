@@ -12,6 +12,7 @@ public class VehicleController : MonoBehaviour
     public float maxVelocity = 20f;
     public float accelerationFactor = 8f;
     public float turnFactor = 100;
+    public float frictionFactor = 40f;
     public Vector3 rayBias = new (0, 0.1f, 0);
 
     private NN _fnn;
@@ -78,7 +79,7 @@ public class VehicleController : MonoBehaviour
         var outputs = _fnn.ForwardPass();
         var gas  = (float)outputs[0];
         var turn = (float)outputs[1];
-        var friction = Mathf.Max(1f, 40 * (float)outputs[2]);
+        var friction = Mathf.Max(1f, frictionFactor * (float)outputs[2]);
 
         return (gas, turn, friction);
     }
