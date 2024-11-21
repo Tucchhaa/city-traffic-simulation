@@ -104,7 +104,7 @@ public class VehicleController : MonoBehaviour
         Math.Clamp(gas, 0, 1);
         Math.Clamp(turn, -1, 1);
         
-        if (gas != 0) {
+        if (gas == 0) {
             _velocity = Mathf.MoveTowards(_velocity, 0, friction * Time.deltaTime);
         }
         else
