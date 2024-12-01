@@ -4,8 +4,6 @@ using System;
 
 public class VehicleController : MonoBehaviour
 {
-    public event System.Action HitWall;
-
     private const float MaxDistance = 10000;
     private const float DebugRayLen = 5f;
 
@@ -14,46 +12,23 @@ public class VehicleController : MonoBehaviour
     public float turnFactor = 100;
     public float frictionFactor = 40f;
     public Vector3 rayBias = new (0, 0.1f, 0);
+    public int index_in_list;
 
-    private NN _fnn;
+    public NN _fnn;
     private float _velocity;
     private Quaternion _rotation;
+    public LayerMask rayIgnore;
+
+    public Manager manager = null;
+
+    public float fitness = 0;
+
+    private DateTime startTime;
 
     private void Start()
     {
-        var layerSizes = new List<int> { 5, 4, 3 };
-        var weightsList = new List<List<double>>
-        {
-            XavierInit(5, 4), // weights to map layer 1 to layer 2 (5 -> 4)
-            XavierInit(4, 3)  // weights to map layer 2 to layer 3 (4 -> 3)
-        };
-        
-        // biases that will be added to each non-input layer [4, 3]
-        var biasList = new List<List<double>>
-        {
-            new() { 0, 0, 0, 0 }, 
-            new() { 0, 0, 0 }
-        };
-        
-        // activation functions used at each non-input layer (relu, sigmoid, tanh)
-        var activationFuncList = new List<string> { "tanh", "tanh" };
-        
-        _fnn = new NN(layerSizes, weightsList, biasList, activationFuncList); 
-    }
-    
-    private List<double> XavierInit(int NIn, int NOut)
-    {
-        System.Random rand = new System.Random();
-        List<double> weights = new List<double>();
-        int size = NIn * NOut;
-        
-        for (int i = 0; i < size ; i++)
-        {
-            // Uniform random in range [-sqrt(6/(n_in+n_out)), sqrt(6/(n_in+n_out))]
-            weights.Add(Math.Sqrt(6.0 / (NIn + NOut)) * (rand.NextDouble() * 2.0 - 1.0));
-        }
-
-        return weights;
+        rayIgnore = LayerMask.GetMask("VehicleSelf");
+        startTime = DateTime.Now;
     }
     
     private void FixedUpdate ()
@@ -61,6 +36,21 @@ public class VehicleController : MonoBehaviour
         var (gas, turning, friction) = GetNnOutput();
 
         MoveVehicle(gas, turning, friction);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        // If collider is not the ground (Quad)
+        if (collision.collider.name != "Quad")
+        {
+            DateTime endTime = DateTime.Now;
+            TimeSpan interval = endTime - startTime;
+
+            double seconds = interval.TotalSeconds;
+            fitness = (float)seconds;
+            manager.VehicleDied(gameObject, fitness);
+            this.enabled = false;
+        }
     }
 
     private (float, float, float) GetNnOutput()
@@ -73,7 +63,7 @@ public class VehicleController : MonoBehaviour
             GetDirectionDistance(new Vector3(1, 0, 0))
         };
         
-        // Debug.Log("ditances: " + string.Join(", ", distances));
+        //Debug.Log("ditances: " + string.Join(", ", distances));
         _fnn.SetInput(distances);
 
         var outputs = _fnn.ForwardPass();
@@ -93,7 +83,7 @@ public class VehicleController : MonoBehaviour
         // Add ray bias to make sure ray doesn't hit the ground
         Ray ray = new Ray(transform.position + rayBias, worldDirection);
 
-        if (Physics.Raycast(ray, out RaycastHit hit))
+        if (Physics.Raycast(ray, out RaycastHit hit, MaxDistance, ~rayIgnore))
             return hit.distance;
         
         return MaxDistance;
@@ -103,14 +93,17 @@ public class VehicleController : MonoBehaviour
     {
         Math.Clamp(gas, 0, 1);
         Math.Clamp(turn, -1, 1);
-        
+
         if (gas == 0) {
             _velocity = Mathf.MoveTowards(_velocity, 0, friction * Time.deltaTime);
         }
         else
         {
             _velocity += gas * accelerationFactor * Time.deltaTime;
-            _velocity = Mathf.Clamp(_velocity, -maxVelocity, maxVelocity);
+            // _velocity = Mathf.Clamp(_velocity, -maxVelocity, maxVelocity);
+
+            // needs further adjustments
+            _velocity = Mathf.Clamp(_velocity, 0.5f * maxVelocity, maxVelocity);
         }
 
         _rotation = transform.rotation;
