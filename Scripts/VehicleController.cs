@@ -4,31 +4,25 @@ using System;
 
 public class VehicleController : MonoBehaviour
 {
+    public event Action OnHitWall;
+    
     private const float MaxRaycastDistance = 10000;
-    private const float DebugRayLen = 50f;
 
     public float maxVelocity = 20f;
     public float accelerationFactor = 8f;
     public float turnFactor = 100;
     public float frictionFactor = 40f;
     public Vector3 rayBias = new (0, 0.5f, 0);
-    public int index_in_list;
+    public LayerMask rayMask = ~0;
 
-    public NN _fnn;
+    public NN Fnn;
     private float _velocity;
     private Quaternion _rotation;
     private Collider _collider;
 
-    public Manager manager = null;
-
-    public float fitness = 0;
-
-    private DateTime startTime;
-
     private void Start()
     {
         _collider = GetComponent<Collider>();
-        startTime = DateTime.Now;
     }
     
     private void FixedUpdate()
@@ -43,10 +37,7 @@ public class VehicleController : MonoBehaviour
         if (collision.collider.name == "Ground")
             return;
         
-        fitness = (float)(DateTime.Now - startTime).TotalSeconds;
-        enabled = false;
-        
-        manager.VehicleDied(gameObject, fitness);
+        OnHitWall?.Invoke();
     }
 
     private (float, float, float) GetNnOutput()
@@ -60,9 +51,9 @@ public class VehicleController : MonoBehaviour
         };
         
         //Debug.Log("ditances: " + string.Join(", ", distances));
-        _fnn.SetInput(distances);
+        Fnn.SetInput(distances);
 
-        var outputs = _fnn.ForwardPass();
+        var outputs = Fnn.ForwardPass();
         var gas  = (float)outputs[0];
         var turn = (float)outputs[1];
         var friction = Mathf.Max(1f, frictionFactor * (float)outputs[2]);
@@ -81,7 +72,7 @@ public class VehicleController : MonoBehaviour
         var rayPoint = transform.position + rayBias;
         var ray = new Ray(rayPoint, worldDirection);
 
-        var distance = Physics.Raycast(ray, out var hit, MaxRaycastDistance)
+        float distance = Physics.Raycast(ray, out var hit, MaxRaycastDistance, rayMask)
             ? hit.distance
             : MaxRaycastDistance;
         

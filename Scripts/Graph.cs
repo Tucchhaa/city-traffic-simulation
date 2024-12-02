@@ -34,7 +34,6 @@ public class Graph : MonoBehaviour
     {
         ConstructGraph();
         CalculateShortestPaths();
-        int a = 2;
     }
     
     public List<Vector3> GetShortestPath(GameObject a, GameObject b)
