@@ -4,20 +4,20 @@ using System;
 
 public class VehicleController : MonoBehaviour
 {
-    private const float MaxDistance = 10000;
-    private const float DebugRayLen = 5f;
+    private const float MaxRaycastDistance = 10000;
+    private const float DebugRayLen = 50f;
 
     public float maxVelocity = 20f;
     public float accelerationFactor = 8f;
     public float turnFactor = 100;
     public float frictionFactor = 40f;
-    public Vector3 rayBias = new (0, 0.1f, 0);
+    public Vector3 rayBias = new (0, 0.5f, 0);
     public int index_in_list;
 
     public NN _fnn;
     private float _velocity;
     private Quaternion _rotation;
-    public LayerMask rayIgnore;
+    private Collider _collider;
 
     public Manager manager = null;
 
@@ -27,30 +27,26 @@ public class VehicleController : MonoBehaviour
 
     private void Start()
     {
-        rayIgnore = LayerMask.GetMask("VehicleSelf");
+        _collider = GetComponent<Collider>();
         startTime = DateTime.Now;
     }
     
-    private void FixedUpdate ()
+    private void FixedUpdate()
     {
         var (gas, turning, friction) = GetNnOutput();
-
+        
         MoveVehicle(gas, turning, friction);
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        // If collider is not the ground (Quad)
-        if (collision.collider.name != "Quad")
-        {
-            DateTime endTime = DateTime.Now;
-            TimeSpan interval = endTime - startTime;
-
-            double seconds = interval.TotalSeconds;
-            fitness = (float)seconds;
-            manager.VehicleDied(gameObject, fitness);
-            this.enabled = false;
-        }
+        if (collision.collider.name == "Ground")
+            return;
+        
+        fitness = (float)(DateTime.Now - startTime).TotalSeconds;
+        enabled = false;
+        
+        manager.VehicleDied(gameObject, fitness);
     }
 
     private (float, float, float) GetNnOutput()
@@ -74,19 +70,26 @@ public class VehicleController : MonoBehaviour
         return (gas, turn, friction);
     }
 
-    private double GetDirectionDistance(Vector3 dir)
+    private double GetDirectionDistance(Vector3 direction)
     {
-        Vector3 worldDirection = transform.TransformDirection(dir.normalized);
+        var worldDirection = transform.TransformDirection(direction.normalized);
 
-        Debug.DrawRay(transform.position, worldDirection * DebugRayLen, Color.red);
+        // Disable own collider, so raycast wouldn't hit it
+        _collider.enabled = false;
         
         // Add ray bias to make sure ray doesn't hit the ground
-        Ray ray = new Ray(transform.position + rayBias, worldDirection);
+        var rayPoint = transform.position + rayBias;
+        var ray = new Ray(rayPoint, worldDirection);
 
-        if (Physics.Raycast(ray, out RaycastHit hit, MaxDistance, ~rayIgnore))
-            return hit.distance;
+        var distance = Physics.Raycast(ray, out var hit, MaxRaycastDistance)
+            ? hit.distance
+            : MaxRaycastDistance;
         
-        return MaxDistance;
+        Debug.DrawRay(rayPoint, worldDirection * distance, Color.green);
+
+        _collider.enabled = true;
+
+        return distance;
     }
 
     private void MoveVehicle(float gas, float turn, float friction)
