@@ -28,7 +28,6 @@ public class VehicleController : MonoBehaviour
     private void FixedUpdate()
     {
         var (gas, turning, friction) = GetNnOutput();
-        
         MoveVehicle(gas, turning, friction);
     }
 
@@ -36,7 +35,9 @@ public class VehicleController : MonoBehaviour
     {
         if (collision.collider.name == "Ground")
             return;
-        
+        if (collision.collider.name.StartsWith("vehicle1"))
+            return;
+        // Debug.Log("collision.collider.name: " + collision.collider.name);
         OnHitWall?.Invoke();
     }
 
@@ -50,7 +51,7 @@ public class VehicleController : MonoBehaviour
             GetDirectionDistance(new Vector3(1, 0, 0))
         };
         
-        //Debug.Log("ditances: " + string.Join(", ", distances));
+        // Debug.Log("ditances: " + string.Join(", ", distances));
         Fnn.SetInput(distances);
 
         var outputs = Fnn.ForwardPass();
@@ -87,7 +88,6 @@ public class VehicleController : MonoBehaviour
     {
         Math.Clamp(gas, 0, 1);
         Math.Clamp(turn, -1, 1);
-
         if (gas == 0) {
             _velocity = Mathf.MoveTowards(_velocity, 0, friction * Time.deltaTime);
         }
@@ -99,13 +99,15 @@ public class VehicleController : MonoBehaviour
             // needs further adjustments
             _velocity = Mathf.Clamp(_velocity, 0.5f * maxVelocity, maxVelocity);
         }
-
         _rotation = transform.rotation;
         _rotation *= Quaternion.AngleAxis(-turn * turnFactor * Time.deltaTime, Vector3.up);
         
         var direction = _rotation * Vector3.forward;
-
+        // Debug.Log("position " + transform.position);
+        // Debug.Log("direction " + direction + " _velocity " + _velocity + " Time.deltaTime " + Time.deltaTime);
+        // Debug.Log("change " + direction * (_velocity * Time.deltaTime));
         transform.position += direction * (_velocity * Time.deltaTime);
+        // Debug.Log("after position " + transform.position);
         transform.rotation = _rotation;
     }
 }
