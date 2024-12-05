@@ -3910,6 +3910,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: ac2eab3fccb2a4758a74ddd6bb33726d, type: 3}
   m_PrefabInstance: {fileID: 799132183}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &799132185 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: ac2eab3fccb2a4758a74ddd6bb33726d, type: 3}
+  m_PrefabInstance: {fileID: 799132183}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &803299151
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6263,6 +6268,68 @@ MonoBehaviour:
     - {fileID: 1001426116}
     - {fileID: 1723764991}
     - {fileID: 1917169512}
+  - from: {fileID: 1917169512}
+    to:
+    - {fileID: 1386383355}
+    - {fileID: 799132185}
+    - {fileID: 91852104}
+  - from: {fileID: 799132185}
+    to:
+    - {fileID: 1917169512}
+    - {fileID: 1996121940}
+  - from: {fileID: 91852104}
+    to:
+    - {fileID: 1917169512}
+    - {fileID: 1996121940}
+  - from: {fileID: 1996121940}
+    to:
+    - {fileID: 799132185}
+    - {fileID: 91852104}
+    - {fileID: 1767068574}
+  - from: {fileID: 1767068574}
+    to:
+    - {fileID: 1996121940}
+    - {fileID: 1306211983}
+    - {fileID: 1485730076}
+  - from: {fileID: 1485730076}
+    to:
+    - {fileID: 1767068574}
+    - {fileID: 67209464}
+    - {fileID: 487269492}
+  - from: {fileID: 487269492}
+    to:
+    - {fileID: 1485730076}
+    - {fileID: 1022657498}
+  - from: {fileID: 67209464}
+    to:
+    - {fileID: 1306211983}
+    - {fileID: 1485730076}
+    - {fileID: 1022657498}
+    - {fileID: 2112575748}
+  - from: {fileID: 1022657498}
+    to:
+    - {fileID: 487269492}
+    - {fileID: 67209464}
+    - {fileID: 2055982843}
+  - from: {fileID: 2112575748}
+    to:
+    - {fileID: 67209464}
+    - {fileID: 2055982843}
+    - {fileID: 2030198527}
+  - from: {fileID: 2055982843}
+    to:
+    - {fileID: 1022657498}
+    - {fileID: 2112575748}
+    - {fileID: 331174394}
+  - from: {fileID: 2030198527}
+    to:
+    - {fileID: 397176841}
+    - {fileID: 2112575748}
+    - {fileID: 331174394}
+  - from: {fileID: 331174394}
+    to:
+    - {fileID: 2030198527}
+    - {fileID: 2055982843}
 --- !u!4 &1334034312
 Transform:
   m_ObjectHideFlags: 0
