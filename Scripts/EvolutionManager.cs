@@ -42,6 +42,7 @@ internal class Vehicle
 
 public class EvolutionManager : MonoBehaviour
 {
+    public int generationCount = 0;
     public int populationSize = 15;
     public GameObject prefab;
     public float crossoverChance = 0.5f;
@@ -129,6 +130,8 @@ public class EvolutionManager : MonoBehaviour
     // ReSharper disable Unity.PerformanceAnalysis
     private void SpawnVehicles()
     {
+        // print the current generation
+        Debug.Log("Genetation: " + generationCount);
         // allWeights is the list of weights for all vehicles
         // for each vehicle, the weights list format is as follows
         // [layer1->2 weights. layer2 biases, layer2->3 weights, layer3 biases]
@@ -164,6 +167,8 @@ public class EvolutionManager : MonoBehaviour
             }
 
             vehicle.Controller.Fnn = new NN(layerSizes, weights, biasList, activationFuncList);
+            // reset StartTime
+            vehicle.StartTime = DateTime.Now;
         }
     }
 
@@ -187,6 +192,7 @@ public class EvolutionManager : MonoBehaviour
         var newGeneration = Recombination(intermediateGeneration);
         
         Genotypes = Mutate(newGeneration);
+        generationCount ++;
 
         SpawnVehicles();
     }
