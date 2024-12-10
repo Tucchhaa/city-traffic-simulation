@@ -8472,15 +8472,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1823cb6ac3d5545398323fc98c0f4928, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  populationSize: 15
+  generationCount: 0
+  populationSize: 3
   prefab: {fileID: 1366942923676155797, guid: 225ad2a32632af34b937efc53ffcf319, type: 3}
   crossoverChance: 0.5
   mutationRate: 0.05
   mutationAmount: 1
   layerSizes: 050000000400000003000000
   activationFuncList:
-  - tanh
-  - tanh
+  - linear
+  - sigmoid
 --- !u!4 &1768101808
 Transform:
   m_ObjectHideFlags: 0

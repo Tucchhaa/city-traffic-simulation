@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Serialization;
+using UnityEngine.PlayerLoop;
 
 internal class Genotype
 {
@@ -19,6 +20,9 @@ internal class Genotype
 
 internal class Vehicle
 {
+    public static Vector3 destination = new (239, 0, 100);
+    public static float[] fitnessWeight = { 0, 20, 10};
+    public Vector3 initialPosition;
     public Genotype Genotype;
     public GameObject GameObject;
     public int ID;
@@ -31,17 +35,23 @@ internal class Vehicle
         GameObject = gameObject;
         ID = gameObject.GetInstanceID();
         Controller = gameObject.GetComponent<VehicleController>();
+        initialPosition = gameObject.transform.position;
         StartTime = DateTime.Now;
     }
     
     public float GetFitness()
     {
-        return (float)(DateTime.Now - StartTime).TotalSeconds;
+        float surviveTime = (float)(DateTime.Now - StartTime).TotalSeconds;
+        Vector3 final_position = GameObject.transform.position;
+        float xFitness = (float)(1-Math.Abs(final_position.x-destination.x)/Math.Abs(initialPosition.x-destination.x));
+        float zFitness = (float)(1-Math.Abs(final_position.z-destination.z)/Math.Abs(initialPosition.z-destination.z));
+        return fitnessWeight[0]*surviveTime + fitnessWeight[1]*xFitness + fitnessWeight[2]*zFitness;
     }
 }
 
 public class EvolutionManager : MonoBehaviour
 {
+    public int generationCount = 0;
     public int populationSize = 15;
     public GameObject prefab;
     public float crossoverChance = 0.5f;
@@ -50,7 +60,7 @@ public class EvolutionManager : MonoBehaviour
 
     public List<int> layerSizes = new() { 5, 4, 3 };
     // activation functions used at each non-input layer (relu, sigmoid, tanh)
-    public List<string> activationFuncList = new() { "tanh", "tanh" };
+    public List<string> activationFuncList = new() { "linear", "sigmoid" };
     
     private Transform _spawnPoint;
     private int _aliveVehicleCount;
@@ -129,6 +139,8 @@ public class EvolutionManager : MonoBehaviour
     // ReSharper disable Unity.PerformanceAnalysis
     private void SpawnVehicles()
     {
+        // print the current generation
+        Debug.Log("Genetation: " + generationCount);
         // allWeights is the list of weights for all vehicles
         // for each vehicle, the weights list format is as follows
         // [layer1->2 weights. layer2 biases, layer2->3 weights, layer3 biases]
@@ -164,6 +176,8 @@ public class EvolutionManager : MonoBehaviour
             }
 
             vehicle.Controller.Fnn = new NN(layerSizes, weights, biasList, activationFuncList);
+            // reset StartTime
+            vehicle.StartTime = DateTime.Now;
         }
     }
 
@@ -187,6 +201,7 @@ public class EvolutionManager : MonoBehaviour
         var newGeneration = Recombination(intermediateGeneration);
         
         Genotypes = Mutate(newGeneration);
+        generationCount ++;
 
         SpawnVehicles();
     }

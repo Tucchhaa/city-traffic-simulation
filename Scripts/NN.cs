@@ -32,7 +32,10 @@ public class NN
         Vector<double> tmp_in = input;
 
         if (Layers.Count != LayerBiases.Count || Layers.Count + 1 != LayerSizes.Count || Layers.Count != ActivationFuncs.Count)
+        {
+            Debug.Log("Layers.Count: " + Layers.Count + " LayerBiases.Count: " + LayerBiases.Count + " LayerSizes.Count: " + LayerSizes.Count + " ActivationFuncs.Count: " + ActivationFuncs.Count);
             throw new ArgumentException("Inconsistent layer configurations.");
+        }
 
         for (int i = 0; i < Layers.Count; i++) 
         {
@@ -41,6 +44,7 @@ public class NN
                 "sigmoid" => Sigmoid,
                 "relu" => ReLU,
                 "tanh" => Tanh,
+                "linear" => Linear,
                 _ => throw new ArgumentException($"Unsupported Activation Function: {ActivationFuncs[i]}")
             };
 
@@ -64,6 +68,7 @@ public class NN
     private static double Sigmoid(double x) => 1.0 / (1.0 + Math.Exp(-x));
     private static double ReLU(double x) => Math.Max(0, x);
     private static double Tanh(double x) => Math.Tanh(x);
+    private static double Linear(double x) => (x);
 
     private Matrix<double> ArrayToMatrix(int rows, int cols, List<double> Weights)
     {
