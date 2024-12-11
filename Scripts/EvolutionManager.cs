@@ -28,7 +28,7 @@ internal class Vehicle
     public List<GameObject> Path;
     private int _pathIndex = 1;
     
-    private const float _distanceSqrToAchieve = 150.0f;
+    private const float _distanceSqrToAchieve = 225.0f;
 
     public Vehicle(Genotype genotype, GameObject gameObject, List<GameObject> path)
     {
@@ -49,18 +49,11 @@ internal class Vehicle
     {
         float progressScore;
 
-        if (_pathIndex == Path.Count - 1)
-        {
-            progressScore = 1;
-        }
-        else
-        {
-            float total = (Path[_pathIndex].transform.position - Path[_pathIndex - 1].transform.position).magnitude;
-            float completed = (GameObject.transform.position - Path[_pathIndex - 1].transform.position).magnitude;
+        float total = (Path[_pathIndex].transform.position - Path[_pathIndex - 1].transform.position).magnitude;
+        float completed = (GameObject.transform.position - Path[_pathIndex - 1].transform.position).magnitude;
 
-            float partialScore = completed / total;
-            progressScore = (_pathIndex - 1 + partialScore) / (Path.Count - 1);
-        }
+        float partialScore = completed / total;
+        progressScore = (_pathIndex - 1 + partialScore) / Path.Count;
         
         float fitness = progressScore;
         
@@ -83,7 +76,17 @@ internal class Vehicle
 
         return rotation;
     }
-    
+
+    private void UpdateAngleToNextNode()
+    {
+        // angle between vehicle's facing and the direction of the next node
+        var angle = Vector3.SignedAngle(GameObject.transform.forward,
+            Path[_pathIndex].transform.position - GameObject.transform.position, Vector3.up);
+
+        Debug.Log(angle);
+        Controller.guidingAngle = angle / 180;
+    }
+
     public void Update()
     {
         var delta = GetTargetNode().transform.position - GameObject.transform.position;
@@ -97,6 +100,7 @@ internal class Vehicle
             }
             
             _pathIndex += 1;
+            UpdateAngleToNextNode();
         }
     }
 }
@@ -111,9 +115,9 @@ public class EvolutionManager : MonoBehaviour
     public float mutationRate = 0.05f;
     public float mutationAmount = 1f;
 
-    public List<int> layerSizes = new() { 5, 4, 3 };
+    public List<int> layerSizes = new() { 6, 5, 4, 2 };
     // activation functions used at each non-input layer (relu, sigmoid, tanh)
-    public List<string> activationFuncList = new() { "tanh", "tanh" };
+    public List<string> activationFuncList = new() { "tanh", "tanh", "tanh" };
     
     private int _aliveVehicleCount;
     private readonly Dictionary<int, Vehicle> _vehicles = new ();
@@ -191,6 +195,8 @@ public class EvolutionManager : MonoBehaviour
         for (var i = 0; i < populationSize; i++)
         {
             var path = graph.GetShortestPath(GetStartNode(), GetEndNode());
+            //Debug.Log("Vector List: " + string.Join(", ", path.Select(v => v.name)));
+        
             var instance = Instantiate(prefab);
             var vehicle = new Vehicle(genotypes[i], instance, path);
             

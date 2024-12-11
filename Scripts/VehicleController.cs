@@ -14,7 +14,7 @@ public class VehicleController : MonoBehaviour
     public float frictionFactor = 40f;
     public Vector3 rayBias = new (0, 0.5f, 0);
     public LayerMask rayMask = ~0;
-
+    public float guidingAngle = 0;
     public NN Fnn;
     private float _velocity;
     private Quaternion _rotation;
@@ -47,16 +47,25 @@ public class VehicleController : MonoBehaviour
             GetDirectionDistance(new Vector3(-1, 0, 1)),
             GetDirectionDistance(new Vector3(0, 0, 1)),
             GetDirectionDistance(new Vector3(1, 0, 1)),
-            GetDirectionDistance(new Vector3(1, 0, 0))
+            GetDirectionDistance(new Vector3(1, 0, 0)),
+            guidingAngle
         };
         
         //Debug.Log("ditances: " + string.Join(", ", distances));
         Fnn.SetInput(distances);
 
         var outputs = Fnn.ForwardPass();
-        var gas  = (float)outputs[0];
+        var gas_and_friction  = (float)outputs[0];
         var turn = (float)outputs[1];
-        var friction = Mathf.Max(1f, frictionFactor * (float)outputs[2]);
+        //var friction = Mathf.Max(1f, frictionFactor * (float)outputs[2]);
+
+        var gas = 0.0f;
+        var friction = 0.0f;
+
+        if (gas_and_friction < 0)
+            friction = Mathf.Max(1f, frictionFactor * gas_and_friction);
+        else
+            gas = gas_and_friction;
 
         return (gas, turn, friction);
     }
@@ -85,8 +94,8 @@ public class VehicleController : MonoBehaviour
 
     private void MoveVehicle(float gas, float turn, float friction)
     {
-        Math.Clamp(gas, 0, 1);
-        Math.Clamp(turn, -1, 1);
+        //Math.Clamp(gas, 0, 1);
+        //Math.Clamp(turn, -1, 1);
 
         if (gas == 0) {
             _velocity = Mathf.MoveTowards(_velocity, 0, friction * Time.deltaTime);
@@ -97,8 +106,8 @@ public class VehicleController : MonoBehaviour
             // _velocity = Mathf.Clamp(_velocity, -maxVelocity, maxVelocity);
 
             // needs further adjustments
-            _velocity = Mathf.Clamp(_velocity, 0.5f * maxVelocity, maxVelocity);
         }
+        _velocity = Mathf.Clamp(_velocity, 0.5f * maxVelocity, maxVelocity);
 
         _rotation = transform.rotation;
         _rotation *= Quaternion.AngleAxis(-turn * turnFactor * Time.deltaTime, Vector3.up);
