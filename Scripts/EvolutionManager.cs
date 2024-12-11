@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics.LinearAlgebra;
 using UnityEngine.Serialization;
 
 internal class Genotype
@@ -25,23 +26,81 @@ internal class Vehicle
     public VehicleController Controller;
     public DateTime StartTime;
 
-    public Vehicle(Genotype genotype, GameObject gameObject)
+    public List<GameObject> Path;
+    private int _pathIndex = 1;
+    
+    private const float _distanceSqrToAchieve = 25.0f;
+
+    public Vehicle(Genotype genotype, GameObject gameObject, List<GameObject> path)
     {
         Genotype = genotype;
         GameObject = gameObject;
         ID = gameObject.GetInstanceID();
         Controller = gameObject.GetComponent<VehicleController>();
         StartTime = DateTime.Now;
+
+        Path = path;
     }
     
     public float GetFitness()
     {
-        return (float)(DateTime.Now - StartTime).TotalSeconds;
+        float progressScore;
+
+        if (_pathIndex == Path.Count - 1)
+        {
+            progressScore = 1;
+        }
+        else
+        {
+            float total = (Path[_pathIndex].transform.position - Path[_pathIndex - 1].transform.position).magnitude;
+            float completed = (GameObject.transform.position - Path[_pathIndex - 1].transform.position).magnitude;
+
+            float partialScore = completed / total;
+            progressScore = (_pathIndex - 1 + partialScore) / (Path.Count - 1);
+        }
+        
+        Debug.Log("Fitness: " + progressScore);
+        float fitness = progressScore;
+        
+        return fitness;
+    }
+
+    public GameObject GetTargetNode()
+    {
+        return Path[_pathIndex];
+    }
+
+    public Quaternion GetRotationToTargetNode()
+    {
+        var rotation = Quaternion.LookRotation(
+            (Path[_pathIndex].transform.position - Path[_pathIndex-1].transform.position).normalized,
+            Vector3.up
+        );
+
+        return rotation;
+    }
+    
+    public void Update()
+    {
+        var delta = GetTargetNode().transform.position - GameObject.transform.position;
+
+        if (delta.sqrMagnitude <= _distanceSqrToAchieve)
+        {
+            if (_pathIndex == Path.Count)
+            {
+                // destination achieved
+                GameObject.SetActive(false);    
+            }
+            
+            _pathIndex += 1;
+        }
     }
 }
 
 public class EvolutionManager : MonoBehaviour
 {
+    public Graph graph;
+    
     public int populationSize = 15;
     public GameObject prefab;
     public float crossoverChance = 0.5f;
@@ -52,10 +111,13 @@ public class EvolutionManager : MonoBehaviour
     // activation functions used at each non-input layer (relu, sigmoid, tanh)
     public List<string> activationFuncList = new() { "tanh", "tanh" };
     
-    private Transform _spawnPoint;
     private int _aliveVehicleCount;
     private readonly Dictionary<int, Vehicle> _vehicles = new ();
     private readonly System.Random _rand = new ();
+
+    // remove these later
+    public GameObject startNode;
+    public GameObject endNode;
 
     private List<Genotype> Genotypes
     {
@@ -83,12 +145,21 @@ public class EvolutionManager : MonoBehaviour
         // Disable collision between vehicles
         int vehicleLayer = LayerMask.NameToLayer("Vehicle");
         Physics.IgnoreLayerCollision(vehicleLayer, vehicleLayer, true);
-
-        _spawnPoint = transform;
         
         var genotypes = GenerateGenotypes();
         InstantiateVehicles(genotypes);
         SpawnVehicles();
+    }
+
+    private void Update()
+    {
+        foreach (var (key, vehicle) in _vehicles)
+        {
+            if (!vehicle.GameObject.activeSelf)
+                continue;
+
+            vehicle.Update();
+        }
     }
 
     private List<Genotype> GenerateGenotypes()
@@ -115,8 +186,9 @@ public class EvolutionManager : MonoBehaviour
     {
         for (var i = 0; i < populationSize; i++)
         {
-            var instance = Instantiate(prefab, _spawnPoint.position, _spawnPoint.rotation);
-            var vehicle = new Vehicle(genotypes[i], instance);
+            var path = graph.GetShortestPath(GetStartNode(), GetEndNode());
+            var instance = Instantiate(prefab);
+            var vehicle = new Vehicle(genotypes[i], instance, path);
             
             vehicle.Controller.OnHitWall += () =>
             {
@@ -124,6 +196,16 @@ public class EvolutionManager : MonoBehaviour
             };
             _vehicles.Add(vehicle.ID, vehicle);
         }
+    }
+
+    GameObject GetStartNode()
+    {
+        return startNode;
+    }
+
+    GameObject GetEndNode()
+    {
+        return endNode;
     }
     
     // ReSharper disable Unity.PerformanceAnalysis
@@ -140,9 +222,9 @@ public class EvolutionManager : MonoBehaviour
         {
             var genotype = vehicle.Genotype;
             var instance = vehicle.GameObject;
-            
-            instance.transform.position = _spawnPoint.position;
-            instance.transform.rotation = _spawnPoint.rotation;
+
+            instance.transform.position = vehicle.Path[0].transform.position;
+            instance.transform.rotation = vehicle.GetRotationToTargetNode();
 
             instance.SetActive(true);
 

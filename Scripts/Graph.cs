@@ -36,30 +36,30 @@ public class Graph : MonoBehaviour
         CalculateShortestPaths();
     }
     
-    public List<Vector3> GetShortestPath(GameObject a, GameObject b)
+    public List<GameObject> GetShortestPath(GameObject a, GameObject b)
     {
         var indA = _instanceIDToIndex[a.GetInstanceID()];
         var indB = _instanceIDToIndex[b.GetInstanceID()];
     
         if (_parent[indA][indB] == -1)
-            return new List<Vector3>();
+            return new List<GameObject>();
     
-        var path = new List<Vector3> { GetPosition(indA) };
+        var path = new List<GameObject> { GetNode(indA) };
 
         while (indA != indB)
         {
             indA = _parent[indA][indB];
-            path.Add(GetPosition(indA));
+            path.Add(GetNode(indA));
         }
     
         return path;
 
-        Vector3 GetPosition(int nodeIndex)
+        GameObject GetNode(int nodeIndex)
         {
             var instanceID = _indexToInstanceID[nodeIndex];
             var node = _gameObjects[instanceID];
     
-            return node.transform.position;
+            return node;
         }
     }
     
