@@ -116,8 +116,8 @@ public class EvolutionManager : MonoBehaviour
     private readonly System.Random _rand = new ();
 
     // remove these later
-    [FormerlySerializedAs("startPos")] public GameObject startNode;
-    [FormerlySerializedAs("endNide")] [FormerlySerializedAs("endPos")] public GameObject endNode;
+    public GameObject startNode;
+    public GameObject endNode;
 
     private List<Genotype> Genotypes
     {
