@@ -24,12 +24,11 @@ internal class Vehicle
     public GameObject GameObject;
     public int ID;
     public VehicleController Controller;
-    public DateTime StartTime;
 
     public List<GameObject> Path;
     private int _pathIndex = 1;
     
-    private const float _distanceSqrToAchieve = 25.0f;
+    private const float _distanceSqrToAchieve = 150.0f;
 
     public Vehicle(Genotype genotype, GameObject gameObject, List<GameObject> path)
     {
@@ -37,9 +36,13 @@ internal class Vehicle
         GameObject = gameObject;
         ID = gameObject.GetInstanceID();
         Controller = gameObject.GetComponent<VehicleController>();
-        StartTime = DateTime.Now;
 
         Path = path;
+    }
+
+    public void Reset()
+    {
+        _pathIndex = 1;
     }
     
     public float GetFitness()
@@ -59,8 +62,9 @@ internal class Vehicle
             progressScore = (_pathIndex - 1 + partialScore) / (Path.Count - 1);
         }
         
-        Debug.Log("Fitness: " + progressScore);
         float fitness = progressScore;
+        
+        Debug.Log("Fitness: " + fitness);
         
         return fitness;
     }
@@ -220,6 +224,8 @@ public class EvolutionManager : MonoBehaviour
 
         foreach ((int _, var vehicle) in _vehicles)
         {
+            vehicle.Reset();
+            
             var genotype = vehicle.Genotype;
             var instance = vehicle.GameObject;
 
