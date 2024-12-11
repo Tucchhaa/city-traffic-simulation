@@ -47,15 +47,19 @@ internal class Vehicle
     
     public float GetFitness()
     {
-        float progressScore;
-
-        float total = (Path[_pathIndex].transform.position - Path[_pathIndex - 1].transform.position).magnitude;
+        var delta = Path[_pathIndex].transform.position - Path[_pathIndex - 1].transform.position;
+        
+        // progress score
+        float total = delta.magnitude;
         float completed = (GameObject.transform.position - Path[_pathIndex - 1].transform.position).magnitude;
 
         float partialScore = completed / total;
-        progressScore = (_pathIndex - 1 + partialScore) / Path.Count;
+        float progressScore = (_pathIndex - 1 + partialScore) / Path.Count;
         
-        float fitness = progressScore;
+        // direction
+        var directionScore = Vector3.Dot(GameObject.transform.forward, delta.normalized);
+        
+        float fitness = progressScore * 0.5f + directionScore * 0.5f;
         
         Debug.Log("Fitness: " + fitness);
         
@@ -82,9 +86,8 @@ internal class Vehicle
         // angle between vehicle's facing and the direction of the next node
         var angle = Vector3.SignedAngle(GameObject.transform.forward,
             Path[_pathIndex].transform.position - GameObject.transform.position, Vector3.up);
-
-        Debug.Log(angle);
-        Controller.guidingAngle = angle / 180;
+        // 
+        Controller.guidingAngle = angle / 180; // -1 -> 1
     }
 
     public void Update()
@@ -195,7 +198,6 @@ public class EvolutionManager : MonoBehaviour
         for (var i = 0; i < populationSize; i++)
         {
             var path = graph.GetShortestPath(GetStartNode(), GetEndNode());
-            //Debug.Log("Vector List: " + string.Join(", ", path.Select(v => v.name)));
         
             var instance = Instantiate(prefab);
             var vehicle = new Vehicle(genotypes[i], instance, path);
@@ -263,6 +265,9 @@ public class EvolutionManager : MonoBehaviour
 
     private void DisableVehicle(Vehicle vehicle)
     {
+        if (vehicle.GameObject.activeSelf == false)
+            return;
+        
         vehicle.Genotype.Fitness = vehicle.GetFitness();
         vehicle.GameObject.SetActive(false);
 
