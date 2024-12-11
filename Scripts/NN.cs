@@ -7,7 +7,7 @@ using Unity.VisualScripting.FullSerializer;
 using System.Collections.Generic;
 public class NN
 {
-    private Vector<double> input = Vector<double>.Build.Dense(5);
+    private Vector<double> input = Vector<double>.Build.Dense(6);
     private List<Matrix<double>> Layers = new List<Matrix<double>>();
     private List<Vector<double>> LayerBiases = new List<Vector<double>>();
     private List<int> LayerSizes;
@@ -25,14 +25,20 @@ public class NN
             Vector<double> BiasesVector = Vector<double>.Build.DenseOfEnumerable(BiasesList[i]);
             LayerBiases.Add(BiasesVector);
         }
+
+        if (Layers.Count != LayerBiases.Count)
+            throw new ArgumentException("Inconsistent layer Biases");
+
+        if (Layers.Count + 1 != LayerSizes.Count)
+            throw new ArgumentException("Inconsistent layer construction");
+
+        if (Layers.Count != ActivationFuncs.Count)
+            throw new ArgumentException("Inconsistent layer activation num");
     }
 
     public double[] ForwardPass()
     {
         Vector<double> tmp_in = input;
-
-        if (Layers.Count != LayerBiases.Count || Layers.Count + 1 != LayerSizes.Count || Layers.Count != ActivationFuncs.Count)
-            throw new ArgumentException("Inconsistent layer configurations.");
 
         for (int i = 0; i < Layers.Count; i++) 
         {
