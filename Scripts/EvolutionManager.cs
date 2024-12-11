@@ -47,15 +47,19 @@ internal class Vehicle
     
     public float GetFitness()
     {
-        float progressScore;
-
-        float total = (Path[_pathIndex].transform.position - Path[_pathIndex - 1].transform.position).magnitude;
+        var delta = Path[_pathIndex].transform.position - Path[_pathIndex - 1].transform.position;
+        
+        // progress score
+        float total = delta.magnitude;
         float completed = (GameObject.transform.position - Path[_pathIndex - 1].transform.position).magnitude;
 
         float partialScore = completed / total;
-        progressScore = (_pathIndex - 1 + partialScore) / Path.Count;
+        float progressScore = (_pathIndex - 1 + partialScore) / Path.Count;
         
-        float fitness = progressScore;
+        // direction
+        var directionScore = Vector3.Dot(GameObject.transform.forward, delta.normalized);
+        
+        float fitness = progressScore * 0.5f + directionScore * 0.5f;
         
         Debug.Log("Fitness: " + fitness);
         
