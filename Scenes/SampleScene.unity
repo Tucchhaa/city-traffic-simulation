@@ -3632,11 +3632,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: ac2eab3fccb2a4758a74ddd6bb33726d, type: 3}
   m_PrefabInstance: {fileID: 799132183}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &799132185 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: ac2eab3fccb2a4758a74ddd6bb33726d, type: 3}
-  m_PrefabInstance: {fileID: 799132183}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &803299151
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6000,16 +5995,16 @@ MonoBehaviour:
     - {fileID: 1001426116}
   - from: {fileID: 1723764991}
     to:
-    - {fileID: 0}
+    - {fileID: 992897894}
     - {fileID: 154641394}
     - {fileID: 1386383355}
-  - from: {fileID: 0}
+  - from: {fileID: 992897894}
     to:
     - {fileID: 1723764991}
     - {fileID: 2092052923}
   - from: {fileID: 2092052923}
     to:
-    - {fileID: 0}
+    - {fileID: 992897894}
     - {fileID: 154641394}
     - {fileID: 397176841}
   - from: {fileID: 397176841}
@@ -6041,9 +6036,9 @@ MonoBehaviour:
   - from: {fileID: 1917169512}
     to:
     - {fileID: 1386383355}
-    - {fileID: 799132185}
+    - {fileID: 553095637}
     - {fileID: 91852104}
-  - from: {fileID: 799132185}
+  - from: {fileID: 553095637}
     to:
     - {fileID: 1917169512}
     - {fileID: 1996121940}
@@ -6053,7 +6048,7 @@ MonoBehaviour:
     - {fileID: 1996121940}
   - from: {fileID: 1996121940}
     to:
-    - {fileID: 799132185}
+    - {fileID: 553095637}
     - {fileID: 91852104}
     - {fileID: 1767068574}
   - from: {fileID: 1767068574}
